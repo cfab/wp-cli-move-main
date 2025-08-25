@@ -24,11 +24,17 @@ use function cli\menu;
  */
 class MoveCommand {
 
-	private const DATA_TYPE_DB      = 'db';
-	private const DATA_TYPE_UPLOADS = 'uploads';
-	private const DATA_TYPES        = [
+	private const DATA_TYPE_DB         = 'db';
+	private const DATA_TYPE_UPLOADS    = 'uploads';
+	private const DATA_TYPE_PLUGINS    = 'plugins';
+	private const DATA_TYPE_MU_PLUGINS = 'mu-plugins';
+	private const DATA_TYPE_THEMES     = 'themes';
+	private const DATA_TYPES           = [
 		self::DATA_TYPE_DB,
 		self::DATA_TYPE_UPLOADS,
+		self::DATA_TYPE_PLUGINS,
+		self::DATA_TYPE_MU_PLUGINS,
+		self::DATA_TYPE_THEMES,
 	];
 
 	public const DEFAULT_MYSQLDUMP_ASSOC_ARGS = [
@@ -64,6 +70,15 @@ class MoveCommand {
 	 * [--uploads]
 	 * : Pull only the uploads folder.
 	 *
+	 * [--plugins]
+	 * : Pull only the plugins folder.
+	 *
+	 * [--mu-plugins]
+	 * : Pull only the mu-plugins folder.
+	 *
+	 * [--themes]
+	 * : Pull only the themes folder.
+	 *
 	 * [--disable-compress]
 	 * : Disable database dump compression.
 	 *
@@ -96,6 +111,15 @@ class MoveCommand {
 	 *
 	 * [--uploads]
 	 * : Push only the uploads folder.
+	 *
+	 * [--plugins]
+	 * : Push only the plugins folder.
+	 *
+	 * [--mu-plugins]
+	 * : Push only the mu-plugins folder.
+	 *
+	 * [--themes]
+	 * : Push only the themes folder.
 	 *
 	 * [--disable-compress]
 	 * : Disable database dump compression.
@@ -141,6 +165,18 @@ class MoveCommand {
 
 		if ( $data_types['uploads'] ) {
 			$this->sync_uploads( $from, $to, $dry_run );
+		}
+
+		if ( $data_types['plugins'] ) {
+			$this->sync_plugins( $from, $to, $dry_run );
+		}
+
+		if ( $data_types['mu-plugins'] ) {
+			$this->sync_mu_plugins( $from, $to, $dry_run );
+		}
+
+		if ( $data_types['themes'] ) {
+			$this->sync_themes( $from, $to, $dry_run );
 		}
 
 		if ( $data_types['db'] ) {
@@ -300,6 +336,92 @@ class MoveCommand {
 		}
 
 		$this->log_section( sprintf( '%s %s', $to->is_local() ? '⬇️ Pulling uploads from' : '⬆️ Pushing uploads to', $remote ) );
+
+		$this->sync_directory( $from, $to, $from_path, $to_path, $dry_run );
+	}
+
+	/**
+	 * Rsync plugins between two aliases
+	 *
+	 * @param Alias $from
+	 * @param Alias $to
+	 * @param bool $dry_run
+	 * @return void
+	 */
+	private function sync_plugins( Alias $from, Alias $to, bool $dry_run = false ): void {
+		$remote = $from->is_local() ? $to : $from;
+
+		$from_path = $from->get_plugins_path();
+		$to_path   = $to->get_plugins_path();
+
+		if ( ! $from_path || ! $to_path ) {
+			WP_CLI::error( 'Could not determine plugins paths' );
+		}
+
+		$this->log_section( sprintf( '%s %s', $to->is_local() ? '⬇️ Pulling plugins from' : '⬆️ Pushing plugins to', $remote ) );
+
+		$this->sync_directory( $from, $to, $from_path, $to_path, $dry_run );
+	}
+
+	/**
+	 * Rsync mu-plugins between two aliases
+	 *
+	 * @param Alias $from
+	 * @param Alias $to
+	 * @param bool $dry_run
+	 * @return void
+	 */
+	private function sync_mu_plugins( Alias $from, Alias $to, bool $dry_run = false ): void {
+		$remote = $from->is_local() ? $to : $from;
+
+		$from_path = $from->get_mu_plugins_path();
+		$to_path   = $to->get_mu_plugins_path();
+
+		if ( ! $from_path || ! $to_path ) {
+			WP_CLI::error( 'Could not determine mu-plugins paths' );
+		}
+
+		$this->log_section( sprintf( '%s %s', $to->is_local() ? '⬇️ Pulling mu-plugins from' : '⬆️ Pushing mu-plugins to', $remote ) );
+
+		$this->sync_directory( $from, $to, $from_path, $to_path, $dry_run );
+	}
+
+	/**
+	 * Rsync themes between two aliases
+	 *
+	 * @param Alias $from
+	 * @param Alias $to
+	 * @param bool $dry_run
+	 * @return void
+	 */
+	private function sync_themes( Alias $from, Alias $to, bool $dry_run = false ): void {
+		$remote = $from->is_local() ? $to : $from;
+
+		$from_path = $from->get_themes_path();
+		$to_path   = $to->get_themes_path();
+
+		if ( ! $from_path || ! $to_path ) {
+			WP_CLI::error( 'Could not determine themes paths' );
+		}
+
+		$this->log_section( sprintf( '%s %s', $to->is_local() ? '⬇️ Pulling themes from' : '⬆️ Pushing themes to', $remote ) );
+
+		$this->sync_directory( $from, $to, $from_path, $to_path, $dry_run );
+	}
+
+	/**
+	 * Generic directory sync method using rsync
+	 *
+	 * @param Alias $from
+	 * @param Alias $to
+	 * @param string $from_path
+	 * @param string $to_path
+	 * @param bool $dry_run
+	 * @return void
+	 */
+	private function sync_directory( Alias $from, Alias $to, string $from_path, string $to_path, bool $dry_run = false ): void {
+		$remote = $from->is_local() ? $to : $from;
+		$local  = $from->is_local() ? $from : $to;
 
 		$rsync_args        = self::DEFAULT_RSYNC_ARGS;
 		$rsync_args['rsh'] = $remote->generate_ssh_command( '' );

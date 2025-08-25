@@ -47,10 +47,10 @@ For more information about alias configuration, refer to the following WP-CLI do
 Depending on the sync direction, use either the `pull` or `push` commands.
 
 ```sh
-wp move pull/push [<alias>] [--db] [--uploads] [--disable-compress] [--dry-run]
+wp move pull/push [<alias>] [--db] [--uploads] [--plugins] [--mu-plugins] [--themes] [--disable-compress] [--dry-run]
 ```
 
-If you omit the `--db` or `--uploads` flags, both data types will be synced by default.
+If you omit the data type flags (`--db`, `--uploads`, `--plugins`, `--mu-plugins`, `--themes`), all data types will be synced by default.
 
 Note that the `<alias>` argument is optional. Configured aliases will be shown in a menu to choose from if left empty.
 
@@ -68,6 +68,9 @@ Both `pull` and `push` commands use the same options.
 - `[<alias>]`: The alias you want to sync with.
 - `--db`: Sync only the database.
 - `--uploads`: Sync only the uploads.
+- `--plugins`: Sync only the plugins folder.
+- `--mu-plugins`: Sync only the mu-plugins folder.
+- `--themes`: Sync only the themes folder.
 - `--disable-compress`: Disable database dump compression.
 - `--dry-run`: Print the command sequence without making any changes.
 
@@ -84,6 +87,18 @@ Pull your production content to your local environment:
 wp move pull @production
 ```
 
+Pull only plugins and themes from staging:
+
+```sh
+wp move pull staging --plugins --themes
+```
+
+Pull only the database:
+
+```sh
+wp move pull staging --db
+```
+
 > [!TIP]
 > Using `@` as declared in `wp-cli.yml` is optional. For example, `production` and `@production` will resolve the same alias.
 
@@ -93,6 +108,18 @@ Push your local content to your staging environment:
 
 ```sh
 wp move push staging
+```
+
+Push only plugins to production:
+
+```sh
+wp move push production --plugins
+```
+
+Push everything except database:
+
+```sh
+wp move push staging --uploads --plugins --mu-plugins --themes
 ```
 
 ## Credits

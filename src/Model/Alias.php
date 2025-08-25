@@ -157,6 +157,36 @@ final class Alias implements Stringable {
 	}
 
 	/**
+	 * Get the plugins path
+	 *
+	 * @return string
+	 */
+	public function get_plugins_path(): string {
+		$result = $this->run_wp( command: 'eval "echo WP_PLUGIN_DIR ?? \'\';"', quiet: true );
+		return $result->stdout;
+	}
+
+	/**
+	 * Get the mu-plugins path
+	 *
+	 * @return string
+	 */
+	public function get_mu_plugins_path(): string {
+		$result = $this->run_wp( command: 'eval "echo WPMU_PLUGIN_DIR ?? \'\';"', quiet: true );
+		return $result->stdout;
+	}
+
+	/**
+	 * Get the themes path
+	 *
+	 * @return string
+	 */
+	public function get_themes_path(): string {
+		$result = $this->run_wp( command: 'eval "echo get_theme_root() ?? \'\';"', quiet: true );
+		return $result->stdout;
+	}
+
+	/**
 	 * Get random hash
 	 *
 	 * @return string
